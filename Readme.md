@@ -2,7 +2,7 @@
 
 Inspired by [tobozo's tweet][tweet], I wanted to code a new WiFi network scanner for the ESPboy that presents the collected data in a different form than [the one proposed by Roman][roman] (the ESPboy creator):
 
-<img width="440" height="357" src="assets/wifi-analyzers.jpg" alt="Comparisons of currently available scanners for ESPboy" />
+<img width="440" height="365" src="assets/wifi-scanners.jpg" alt="Comparisons of currently available scanners for ESPboy" />
 
 The WiFi channel saturation histogram builds by counting the number of access points occupying each channel. The height of the bars computes by the ratio between the number of access points occupying each channel compared to the maximum number observed for all channels.
 
