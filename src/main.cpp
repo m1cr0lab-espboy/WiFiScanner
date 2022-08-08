@@ -17,9 +17,13 @@
 uint8_t constexpr LOCK_ICON_SIZE    = 5;
 uint8_t const constexpr LOCK_ICON[] = { 0x70, 0x88, 0x88, 0xf8, 0xf8 };
 
+uint8_t constexpr DBM_ICON_WIDTH   = 13;
+uint8_t constexpr DBM_ICON_HEIGHT  = 5;
+uint8_t const constexpr DBM_ICON[] = { 0x24, 0x00, 0x2a, 0x50, 0x6c, 0xa8, 0xaa, 0xa8, 0x6c, 0xa8 };
+
 uint8_t  constexpr CHANNELS           = 13;
 uint8_t  constexpr MAX_AP_PER_CHANNEL = 4;
-uint8_t  constexpr MAX_SSID_LENGTH    = 12;
+uint8_t  constexpr MAX_SSID_LENGTH    = 14;
 uint16_t constexpr SCAN_PERIOD_MS     = 3000;
 uint8_t  constexpr GUI_HEIGHT         = TFT_HEIGHT >> 1;
 uint8_t  constexpr BAR_WIDTH          = 8;
@@ -105,7 +109,9 @@ void drawGraph() {
 
     uint16_t * const fb  = (uint16_t*)fb1->getBuffer();
     uint16_t   const len = GRAPH_WIDTH * GRAPH_HEIGHT;
-    uint16_t color, r, g, b;
+    uint16_t color;
+    uint8_t  r, g, b;
+
     for (uint16_t i = 0; i < len; ++i) {
         if (fb[i]) {
             // swaps endianness
@@ -165,35 +171,50 @@ void drawGUI() {
         snprintf(text, max_len, "%u/%u AP", devices[current_channel], nb_of_devices);
         drawString(gui, text, TFT_WIDTH - 1, 0, COLOR_GREY, Align::RIGHT);
 
-        uint8_t y = LINE_HEIGHT;
-
         uint8_t n = devices[current_channel];
+
         if (n == 0) {
 
-            y += (GUI_HEIGHT - (LINE_HEIGHT << 1) - (FONT_SIZE + 1)) >> 1;
+            uint8_t const y = LINE_HEIGHT + ((GUI_HEIGHT - (LINE_HEIGHT << 1) - (FONT_SIZE + 1)) >> 1);
             drawString(gui, F("No network"),      TFT_WIDTH >> 1, y,               TFT_ORANGE, Align::CENTER);
             drawString(gui, F("on this channel"), TFT_WIDTH >> 1, y + LINE_HEIGHT, TFT_ORANGE, Align::CENTER);
 
         } else {
 
             snprintf(text, max_len, "Top %u", n < MAX_AP_PER_CHANNEL ? n : MAX_AP_PER_CHANNEL);
-            drawString(gui, text, TFT_WIDTH >> 1, y, TFT_YELLOW, Align::CENTER);
+            drawString(gui, text, TFT_WIDTH >> 1, LINE_HEIGHT, TFT_YELLOW, Align::CENTER);
+
+            uint8_t const xr = TFT_WIDTH - LOCK_ICON_SIZE - FONT_SIZE - DBM_ICON_WIDTH;
 
             for (uint8_t i = 0; i < n; ++i) {
+
                 WiFiAP const * const wap = &ap[current_channel][i];
-                snprintf(text, max_len, "%i dBm", wap->rssi);
-                drawString(gui, wap->ssid, 0, y + (i + 1) * LINE_HEIGHT, COLOR_BLUE);
-                drawString(gui, text, TFT_WIDTH - 1 - LOCK_ICON_SIZE - FONT_SIZE, y + (i + 1) * LINE_HEIGHT, COLOR_BLUE, Align::RIGHT);
+                uint8_t y = LINE_HEIGHT + (i + 1) * LINE_HEIGHT;
+
+                snprintf(text, max_len, "%i", wap->rssi);
+                drawString(gui, wap->ssid, 0, y, COLOR_BLUE);
+                drawString(gui, text, xr - 3, y, COLOR_BLUE, Align::RIGHT);
+
+                gui->drawBitmap(
+                    xr,
+                    y,
+                    DBM_ICON,
+                    DBM_ICON_WIDTH,
+                    DBM_ICON_HEIGHT,
+                    COLOR_BLUE
+                );
+
                 if (wap->locked) {
                     gui->drawBitmap(
                         TFT_WIDTH - LOCK_ICON_SIZE,
-                        y + (i + 1) * LINE_HEIGHT,
+                        y,
                         LOCK_ICON,
                         LOCK_ICON_SIZE,
                         LOCK_ICON_SIZE,
                         COLOR_ORANGE
                     );
                 }
+
             }
 
         }
@@ -402,7 +423,6 @@ void loop() {
         case State::SCAN:
             scanNetworks();
             update();
-            break;
 
     }
 
